@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>無限層級博弈遊戲</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            overflow: hidden;
+        }
+        
+        /* UI 面板樣式 */
+        #ui-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            min-width: 300px;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .stat-label {
+            font-weight: bold;
+        }
+        
+        .stat-value {
+            color: #4CAF50;
+        }
+        
+        /* BET 控制器 */
+        #bet-control {
+            margin: 15px 0;
+        }
+        
+        #bet-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        /* 按鈕樣式 */
+        .game-button {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+            width: 100%;
+        }
+        
+        .game-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .game-button:active {
+            transform: translateY(0);
+        }
+        
+        /* 三維場景容器 */
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        /* 狀態提示 */
+        #status-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px 40px;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 2000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- UI 控制面板 -->
+    <div id="ui-panel">
+        <div class="stat-row">
+            <span class="stat-label">本金:</span>
+            <span class="stat-value">$<span id="balance">10000</span></span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">累積獎金:</span>
+            <span class="stat-value">$<span id="accumulated-prize">0</span></span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">當前層數:</span>
+            <span class="stat-value"><span id="current-level">1</span></span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">顯示層級:</span>
+            <span class="stat-value"><span id="visible-layers">1-4</span></span>
+        </div>
+        
+        <div id="bet-control">
+            <div class="stat-row">
+                <span class="stat-label">下注金額:</span>
+                <span class="stat-value">$<span id="bet-amount">100</span></span>
+            </div>
+            <input type="range" id="bet-slider" min="100" max="1000" step="100" value="100">
+        </div>
+        
+        <button class="game-button" id="claim-button">領獎</button>
+        <button class="game-button" id="new-game-button" style="display: none;">重新開始</button>
+    </div>
+    
+    <!-- 三維遊戲場景 -->
+    <div id="game-container"></div>
+    
+    <!-- 狀態消息 -->
+    <div id="status-message"></div>
+    
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- 遊戲模組 -->
+    <script src="js/config.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game-logic.js"></script>
+    <script src="js/debug.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

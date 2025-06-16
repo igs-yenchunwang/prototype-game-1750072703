@@ -1,0 +1,29 @@
+# 系統檔案
+.DS_Store
+Thumbs.db
+
+# 編輯器檔案
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 日誌檔案
+*.log
+
+# 臨時檔案
+*.tmp
+*.temp
+
+# 備份檔案
+*.bak
+*~
+
+# Node.js (如果將來添加)
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# 其他
+*.zip
+*.tar.gz
