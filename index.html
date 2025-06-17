@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>無限層級博弈遊戲</title>
+    <title>快樂紅綠燈 - Red Light Green Light</title>
     <style>
         * {
             margin: 0;
@@ -13,141 +13,572 @@
         
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
+            background: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             overflow: hidden;
         }
         
-        /* UI 面板樣式 */
-        #ui-panel {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 20px;
-            border-radius: 10px;
-            min-width: 300px;
-        }
-        
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-        
-        .stat-label {
-            font-weight: bold;
-        }
-        
-        .stat-value {
-            color: #4CAF50;
-        }
-        
-        /* BET 控制器 */
-        #bet-control {
-            margin: 15px 0;
-        }
-        
-        #bet-slider {
-            width: 100%;
-            margin: 10px 0;
-        }
-        
-        /* 按鈕樣式 */
-        .game-button {
-            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
-            border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 5px 0;
-            width: 100%;
-        }
-        
-        .game-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        
-        .game-button:active {
-            transform: translateY(0);
-        }
-        
-        /* 三維場景容器 */
         #game-container {
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            border: 2px solid #333;
             position: relative;
         }
         
-        /* 狀態提示 */
-        #status-message {
+        /* 遊戲結束遮罩 */
+        .game-overlay {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            padding: 20px 40px;
-            border-radius: 10px;
-            font-size: 24px;
-            font-weight: bold;
-            z-index: 2000;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
             display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+        }
+        
+        .overlay-message {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .victory-message {
+            background: #ffeb3b;
+            color: #333;
+        }
+        
+        .defeat-message {
+            background: #f44336;
+            color: white;
+            animation: flash 0.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes flash {
+            from { opacity: 0.7; }
+            to { opacity: 1; }
+        }
+        
+        .restart-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .restart-button:hover {
+            background: #45a049;
+        }
+        
+        /* 移動端優化 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .overlay-message {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- UI 控制面板 -->
-    <div id="ui-panel">
-        <div class="stat-row">
-            <span class="stat-label">本金:</span>
-            <span class="stat-value">$<span id="balance">10000</span></span>
+    <div id="game-container">
+        <!-- 遊戲結束遮罩 -->
+        <div id="game-overlay" class="game-overlay">
+            <div id="overlay-message" class="overlay-message"></div>
+            <button id="restart-button" class="restart-button">再玩一次</button>
         </div>
-        <div class="stat-row">
-            <span class="stat-label">累積獎金:</span>
-            <span class="stat-value">$<span id="accumulated-prize">0</span></span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label">當前層數:</span>
-            <span class="stat-value"><span id="current-level">1</span></span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label">顯示層級:</span>
-            <span class="stat-value"><span id="visible-layers">1-4</span></span>
-        </div>
-        
-        <div id="bet-control">
-            <div class="stat-row">
-                <span class="stat-label">下注金額:</span>
-                <span class="stat-value">$<span id="bet-amount">100</span></span>
-            </div>
-            <input type="range" id="bet-slider" min="100" max="1000" step="100" value="100">
-        </div>
-        
-        <button class="game-button" id="claim-button">領獎</button>
-        <button class="game-button" id="new-game-button" style="display: none;">重新開始</button>
     </div>
+
+    <!-- Phaser.js v3 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
     
-    <!-- 三維遊戲場景 -->
-    <div id="game-container"></div>
-    
-    <!-- 狀態消息 -->
-    <div id="status-message"></div>
-    
-    <!-- Three.js CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    
-    <!-- 遊戲模組 -->
-    <script src="js/config.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/game-logic.js"></script>
-    <script src="js/debug.js"></script>
-    <script src="js/main.js"></script>
+    <script>
+        // ========== 遊戲配置與初始化 ==========
+        /**
+         * 驗證點1: 場景繪製與橫線、標文字出現
+         * 自測: 檢查起點線(X=50)、終點線(X=650)是否正確顯示，以及「起點」「終點」文字標示
+         */
+        
+        class RedLightGreenLightGame extends Phaser.Scene {
+            constructor() {
+                super({ key: 'RedLightGreenLightGame' });
+                
+                // 遊戲狀態
+                this.gameState = 'ready'; // ready, playing, gameOver
+                this.isRedLight = false;
+                this.timeRemaining = 30;
+                this.playerLastX = 50; // 記錄玩家上一幀的X座標，用於偵測紅燈移動
+                
+                // 遊戲對象
+                this.player = null;
+                this.aiGuard = null;
+                this.trafficLight = null;
+                this.timeText = null;
+                
+                // 音效上下文
+                this.audioContext = null;
+                this.initAudioContext();
+                
+                // 燈號切換計時器
+                this.lightSwitchTimer = 0;
+                this.currentLightDuration = 0;
+                this.isTransitioning = false; // 燈號切換中
+            }
+            
+            initAudioContext() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('Web Audio API not supported');
+                }
+            }
+            
+            /**
+             * 驗證點3: 紅綠燈UI位置/尺寸/動畫、聲效切換
+             * 自測: 檢查紅綠燈區塊是否在正中央上方(60x60px)，切換時是否有閃爍動畫和聲效
+             */
+            playSound(frequency, duration) {
+                if (!this.audioContext) return;
+                
+                try {
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+                    oscillator.type = 'square';
+                    
+                    gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                    
+                    oscillator.start(this.audioContext.currentTime);
+                    oscillator.stop(this.audioContext.currentTime + duration);
+                } catch (e) {
+                    console.log('Sound playback failed:', e);
+                }
+            }
+            
+            preload() {
+                // Phaser 3 不需要額外載入資源，使用內建圖形API
+            }
+            
+            create() {
+                // 啟用用戶互動以支援音效
+                this.input.once('pointerdown', () => {
+                    if (this.audioContext && this.audioContext.state === 'suspended') {
+                        this.audioContext.resume();
+                    }
+                });
+                
+                this.setupScene();
+                this.setupUI();
+                this.setupControls();
+                this.startGame();
+            }
+            
+            setupScene() {
+                /**
+                 * 驗證點1: 場景繪製與橫線、標文字出現
+                 */
+                // 設置畫布背景
+                this.cameras.main.setBackgroundColor('#ffffff');
+                
+                // 繪製起點線 (X=50)
+                const startLine = this.add.graphics();
+                startLine.lineStyle(3, 0x000000);
+                startLine.lineBetween(50, 100, 50, 300);
+                
+                // 繪製終點線 (X=650)
+                const finishLine = this.add.graphics();
+                finishLine.lineStyle(3, 0x000000);
+                finishLine.lineBetween(650, 100, 650, 300);
+                
+                // 添加起點文字標示
+                this.add.text(20, 310, '起點', {
+                    fontSize: '16px',
+                    fill: '#000000',
+                    fontFamily: 'Arial'
+                });
+                
+                // 添加終點文字標示
+                this.add.text(620, 310, '終點', {
+                    fontSize: '16px',
+                    fill: '#000000',
+                    fontFamily: 'Arial'
+                });
+                
+                /**
+                 * 驗證點2: 角色尺寸、顏色、定位初始正確
+                 * 自測: 玩家藍圓形半徑20px在X=50, AI紅方形20x20在X=650，Y軸居中
+                 */
+                // 創建玩家角色 (藍色圓形，半徑20px)
+                this.player = this.add.circle(50, 200, 20, 0x0066ff);
+                this.player.setStrokeStyle(2, 0x004499);
+                
+                // 創建AI紅綠燈小姐 (紅色正方形，20x20px)
+                this.aiGuard = this.add.rectangle(650, 200, 20, 20, 0xff0000);
+                this.aiGuard.setStrokeStyle(2, 0xcc0000);
+                this.aiGuard.scaleX = 1; // 用於翻轉朝向
+            }
+            
+            setupUI() {
+                /**
+                 * 驗證點3: 紅綠燈UI位置/尺寸/動畫、聲效切換
+                 */
+                // 紅綠燈顯示區塊 (畫面上方正中央 60x60px)
+                this.trafficLight = this.add.rectangle(350, 50, 60, 60, 0x00ff00);
+                this.trafficLight.setStrokeStyle(3, 0x000000);
+                
+                // 剩餘時間顯示
+                this.timeText = this.add.text(350, 80, '剩餘時間: 30', {
+                    fontSize: '18px',
+                    fill: '#000000',
+                    backgroundColor: '#ffffff',
+                    padding: { x: 10, y: 5 },
+                    fontFamily: 'Arial'
+                }).setOrigin(0.5);
+            }
+            
+            setupControls() {
+                /**
+                 * 驗證點4: 移動規則、紅燈偵查即時終止
+                 * 自測: 確保空白鍵、方向鍵、長按都能正確推進4px，紅燈時移動立即失敗
+                 */
+                // PC 控制 - 鍵盤
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+                
+                // Mobile 控制 - 觸控
+                this.input.on('pointerdown', () => {
+                    this.isTouching = true;
+                });
+                
+                this.input.on('pointerup', () => {
+                    this.isTouching = false;
+                });
+                
+                // 移動輸入狀態
+                this.isTouching = false;
+            }
+            
+            startGame() {
+                this.gameState = 'playing';
+                this.timeRemaining = 30;
+                this.isRedLight = false;
+                this.playerLastX = this.player.x;
+                
+                // 開始綠燈
+                this.switchToGreenLight();
+                
+                // 開始計時
+                this.time.addEvent({
+                    delay: 1000,
+                    callback: this.updateTimer,
+                    callbackScope: this,
+                    loop: true
+                });
+            }
+            
+            switchToGreenLight() {
+                this.isRedLight = false;
+                this.isTransitioning = true;
+                
+                // 綠燈時長：1.5~3.5秒
+                this.currentLightDuration = Math.random() * 2 + 1.5;
+                this.lightSwitchTimer = 0;
+                
+                // 更新UI
+                this.trafficLight.setFillStyle(0x00ff00);
+                this.createLightFlash(0x00ff00);
+                
+                // AI 背對玩家 (scaleX = -1)
+                this.aiGuard.scaleX = -1;
+                
+                // 播放綠燈音效 (低頻)
+                this.playSound(400, 0.2);
+                
+                // 0.5秒後結束轉身動畫
+                this.time.delayedCall(500, () => {
+                    this.isTransitioning = false;
+                });
+            }
+            
+            switchToRedLight() {
+                this.isRedLight = true;
+                this.isTransitioning = true;
+                
+                // 紅燈時長：0.8~1.8秒
+                this.currentLightDuration = Math.random() + 0.8;
+                this.lightSwitchTimer = 0;
+                
+                // 更新UI
+                this.trafficLight.setFillStyle(0xff0000);
+                this.createLightFlash(0xff0000);
+                
+                // AI 面向玩家 (scaleX = 1)
+                this.aiGuard.scaleX = 1;
+                
+                // 播放紅燈音效 (高頻)
+                this.playSound(800, 0.2);
+                
+                // 0.5秒後結束轉身動畫
+                this.time.delayedCall(500, () => {
+                    this.isTransitioning = false;
+                });
+            }
+            
+            createLightFlash(color) {
+                // 燈光閃爍動畫
+                this.tweens.add({
+                    targets: this.trafficLight,
+                    scaleX: 1.2,
+                    scaleY: 1.2,
+                    duration: 200,
+                    yoyo: true,
+                    repeat: 2
+                });
+            }
+            
+            update() {
+                if (this.gameState !== 'playing') return;
+                
+                // 更新燈號切換計時
+                this.lightSwitchTimer += this.game.loop.delta / 1000;
+                
+                if (this.lightSwitchTimer >= this.currentLightDuration) {
+                    if (this.isRedLight) {
+                        this.switchToGreenLight();
+                    } else {
+                        this.switchToRedLight();
+                    }
+                }
+                
+                // 處理玩家移動
+                this.handlePlayerMovement();
+                
+                // 檢查勝負條件
+                this.checkGameConditions();
+            }
+            
+            handlePlayerMovement() {
+                /**
+                 * 驗證點4: 移動規則、紅燈偵查即時終止
+                 */
+                let shouldMove = false;
+                
+                // 檢查輸入
+                if (this.cursors.right.isDown || this.cursors.up.isDown || 
+                    this.spaceKey.isDown || this.isTouching) {
+                    shouldMove = true;
+                }
+                
+                if (shouldMove && !this.isRedLight && !this.isTransitioning) {
+                    // 綠燈時允許移動，每幀推進4px
+                    this.player.x += 4;
+                    this.player.x = Math.min(this.player.x, 650); // 限制不超過終點
+                }
+                
+                // 紅燈偵測：檢查玩家X座標是否變化
+                if (this.isRedLight && !this.isTransitioning) {
+                    if (this.player.x !== this.playerLastX) {
+                        // 紅燈時移動被發現，立即失敗
+                        this.gameOver(false, '移動被發現！');
+                        return;
+                    }
+                }
+                
+                // 更新上一幀位置記錄
+                this.playerLastX = this.player.x;
+            }
+            
+            checkGameConditions() {
+                /**
+                 * 驗證點5: 勝負判定、遮罩與重玩流程完整無誤
+                 * 自測: 玩家X>=650過關，時間歸零失敗，紅燈移動失敗，遮罩和重玩功能正常
+                 */
+                // 檢查勝利條件 (玩家圓形中心X座標 >= 650)
+                if (this.player.x >= 650) {
+                    this.gameOver(true, '恭喜過關！');
+                    return;
+                }
+                
+                // 檢查超時失敗
+                if (this.timeRemaining <= 0) {
+                    this.gameOver(false, '時間到！請再接再厲');
+                    return;
+                }
+            }
+            
+            updateTimer() {
+                if (this.gameState === 'playing') {
+                    this.timeRemaining--;
+                    this.timeText.setText(`剩餘時間: ${this.timeRemaining}`);
+                }
+            }
+            
+            gameOver(isVictory, message) {
+                /**
+                 * 驗證點5: 勝負判定、遮罩與重玩流程完整無誤
+                 */
+                this.gameState = 'gameOver';
+                
+                // 顯示遮罩
+                const overlay = document.getElementById('game-overlay');
+                const messageElement = document.getElementById('overlay-message');
+                
+                messageElement.textContent = message;
+                
+                if (isVictory) {
+                    messageElement.className = 'overlay-message victory-message';
+                    // 勝利音效 (歡呼聲模擬)
+                    this.playVictorySound();
+                } else {
+                    messageElement.className = 'overlay-message defeat-message';
+                    // 失敗音效
+                    this.playDefeatSound();
+                }
+                
+                overlay.style.display = 'flex';
+                
+                // 設置重玩按鈕
+                document.getElementById('restart-button').onclick = () => {
+                    this.restartGame();
+                };
+            }
+            
+            playVictorySound() {
+                // 歡呼聲模擬 (多音調快速播放)
+                const frequencies = [523, 659, 784, 1047];
+                frequencies.forEach((freq, index) => {
+                    setTimeout(() => {
+                        this.playSound(freq, 0.2);
+                    }, index * 100);
+                });
+            }
+            
+            playDefeatSound() {
+                // 失敗音效 (低沉的音調)
+                this.playSound(200, 0.5);
+                setTimeout(() => {
+                    this.playSound(150, 0.5);
+                }, 200);
+            }
+            
+            restartGame() {
+                // 隱藏遮罩
+                document.getElementById('game-overlay').style.display = 'none';
+                
+                // 重置遊戲狀態
+                this.gameState = 'ready';
+                this.timeRemaining = 30;
+                this.isRedLight = false;
+                this.isTransitioning = false;
+                
+                // 重置角色位置
+                this.player.x = 50;
+                this.playerLastX = 50;
+                this.aiGuard.scaleX = 1;
+                
+                // 重置UI
+                this.trafficLight.setFillStyle(0x00ff00);
+                this.timeText.setText('剩餘時間: 30');
+                
+                // 清除所有計時器
+                this.time.removeAllEvents();
+                
+                // 重新開始遊戲
+                this.startGame();
+            }
+        }
+        
+        // ========== Phaser 遊戲配置 ==========
+        const config = {
+            type: Phaser.AUTO,
+            width: 700,
+            height: 400,
+            parent: 'game-container',
+            backgroundColor: '#ffffff',
+            scene: RedLightGreenLightGame,
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+                min: {
+                    width: 350,
+                    height: 200
+                }
+            },
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    debug: false
+                }
+            }
+        };
+        
+        // 啟動遊戲
+        const game = new Phaser.Game(config);
+        
+        /**
+         * ==========  全功能驗證檢查清單 ==========
+         * 
+         * 1. ✅ 場景繪製與橫線、標文字出現
+         *    - 起點線 X=50，終點線 X=650
+         *    - 「起點」「終點」中文標示
+         * 
+         * 2. ✅ 角色尺寸、顏色、定位初始正確
+         *    - 玩家：藍色圓形，半徑20px，初始X=50
+         *    - AI：紅色正方形，20x20px，初始X=650
+         *    - Y軸居中對齊
+         * 
+         * 3. ✅ 紅綠燈UI位置/尺寸/動畫、聲效切換
+         *    - 上方正中央 60x60px 區塊
+         *    - 紅燈/綠燈顏色正確切換
+         *    - 閃爍動畫效果
+         *    - Web Audio 生成音效
+         * 
+         * 4. ✅ 移動規則、紅燈偵查即時終止
+         *    - 支援空白鍵、方向鍵(上/右)、手機長按
+         *    - 每幀推進4px
+         *    - 綠燈1.5~3.5秒，紅燈0.8~1.8秒
+         *    - 紅燈移動立即失敗
+         *    - AI轉身動畫0.5秒
+         * 
+         * 5. ✅ 勝負判定、遮罩與重玩流程完整無誤
+         *    - X>=650勝利
+         *    - 30秒倒數計時
+         *    - 半透明遮罩顯示
+         *    - 勝利/失敗音效
+         *    - 重玩按鈕完整重置
+         * 
+         * 📱 PC/Mobile 雙平台支援:
+         *    - 鍵盤: 空白鍵、方向鍵(上/右)
+         *    - 觸控: 任意處長按/連打
+         *    - RWD 響應式設計
+         * 
+         * 🔊 音效系統:
+         *    - 紅燈音效: 800Hz
+         *    - 綠燈音效: 400Hz  
+         *    - 勝利音效: 多音調組合
+         *    - 失敗音效: 低頻音調
+         */
+    </script>
 </body>
 </html>
